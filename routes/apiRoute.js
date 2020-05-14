@@ -1,3 +1,4 @@
+const mongoose = require("mongoose")
 const router = require("express").Router();
 const Workout = require("../models/workout.js");
 const path = require("path");
@@ -13,26 +14,38 @@ router.get("/api/workouts", (req, res) => {
     });
 });
 
-router.put("/api/workouts/:id", (req, res) => {
-  Workout.findById(req.params.id, function (err, workoutById) {
-    const objExercise = workoutById.exercises;
-    objExercise.push(req.body);
-    try {
-      const updated = workoutById.save();   
-      return res.status(200).send(updated)
-    }
-    catch (err) {
-      return res.status(500).send(err);
-    }
-  });
+router.put("/api/workouts/:id", ({body, params}, res) => {
+  console.log("Hello:", params.id);
+  Workout.findByIdAndUpdate(params.id, {$push: {exercises: body}},
+    {new: true, runValidators: true})
+    .then(newWorkout => {
+      res.json(newWorkout)
+    }).catch((err) => {
+      res.json(err)
+    })
+    //console.log("Goodbye:", workoutById);
+    //const objExercise = workoutById.exercises;
+    //objExercise.push(body);
+    //try {
+    //   const updated = workoutById.save();   
+    //   return res.status(200).send(updated)
+    // }
+    // catch (err) {
+    //   return res.status(500).send(err);
+    // }
+  //});
 })
 
 router.post("/api/workouts", (req, res) => {
-  const newWorkoutObj = new Workout(req.body);
-  newWorkoutObj.save(err => {
-    if (err) return res.status(500).send(err);
-    return res.status(200).send(newWorkoutObj)
-  });
+  //const newWorkoutObj = new Workout(req.body);
+  Workout.create({
+    //if (err) return res.status(500).send(err);
+    //return res.status(200).send(newWorkoutObj)
+  }).then((newWorkout) => {
+    res.json(newWorkout)
+  }).catch((err) => {
+    res.json(err)
+  })
 });
 
 router.get("/api/workouts/range", (req, res) => {
