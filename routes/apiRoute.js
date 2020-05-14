@@ -14,34 +14,44 @@ router.get("/api/workouts", (req, res) => {
     });
 });
 
-router.put("/api/workouts/:id", ({body, params}, res) => {
-  console.log("Hello:", params.id);
-  Workout.findByIdAndUpdate(params.id, {$push: {exercises: body}},
-    {new: true, runValidators: true})
+router.put("/api/workouts/:id", (req, res) => {
+  console.log("Hello:", req.params.id);
+  const body = req.body;
+  var duration = req.body.duration;
+  Workout.findByIdAndUpdate(req.params.id, { $push: { exercises: req.body } },
+    { new: true, runValidators: true })
     .then(newWorkout => {
-      res.json(newWorkout)
+      var totalDuration = newWorkout.totalDuration + duration;
+      Workout.findByIdAndUpdate(req.params.id, { totalDuration: totalDuration })
+        .then(newWorkoutDuration => {
+          res.json(newWorkoutDuration)
+        })
     }).catch((err) => {
       res.json(err)
     })
-    //console.log("Goodbye:", workoutById);
-    //const objExercise = workoutById.exercises;
-    //objExercise.push(body);
-    //try {
-    //   const updated = workoutById.save();   
-    //   return res.status(200).send(updated)
-    // }
-    // catch (err) {
-    //   return res.status(500).send(err);
-    // }
+  //console.log("Goodbye:", workoutById);
+  //const objExercise = workoutById.exercises;
+  //objExercise.push(body);
+  //try {
+  //   const updated = workoutById.save();   
+  //   return res.status(200).send(updated)
+  // }
+  // catch (err) {
+  //   return res.status(500).send(err);
+  // }
   //});
 })
 
 router.post("/api/workouts", (req, res) => {
   //const newWorkoutObj = new Workout(req.body);
-  Workout.create({
-    //if (err) return res.status(500).send(err);
-    //return res.status(200).send(newWorkoutObj)
-  }).then((newWorkout) => {
+  const body = req.body;
+  console.log(req.body);
+  var duration = 0;
+  for (var i = 0; i < body.exercises.length; i++) {
+    duration += body.exercises[i].duration
+  }
+  body.totalDuration = duration;
+  Workout.create(body).then((newWorkout) => {
     res.json(newWorkout)
   }).catch((err) => {
     res.json(err)
